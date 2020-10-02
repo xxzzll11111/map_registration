@@ -147,9 +147,9 @@ def main(argv):
     for opt, arg in opts:
         if opt in ("-n"):
             exp_name = arg
-    dataset_path = 'picdata' #'picdata_120'
-    MaxFrameId = 418 #143
-    SubmapLength = 180 #120
+    dataset_path = 'b2-2015-09-01-11-55-40-UG' #'b0-2014-07-11-11-00-49-1OG' #'picdata' #'picdata_120'
+    MaxFrameId = 242 #418 #143
+    SubmapLength = 120 #180 #120
     Resolution = 0.05
     
     print("OK")
@@ -182,8 +182,8 @@ def main(argv):
     matcher = cv2.detail_AffineBestOf2NearestMatcher()
     for frameIndex in range(MaxFrameId +1 ):
         print("OCMAP: index: {}".format(frameIndex) )
-        # mappng_fname_tmp = "output_int8_{}_{}.png".format(frameIndex,SubmapLength)
-        mappng_fname_tmp = "output_{}_{}.png".format(frameIndex,SubmapLength)
+        mappng_fname_tmp = "output_int8_{}_{}.png".format(frameIndex,SubmapLength)
+        # mappng_fname_tmp = "output_{}_{}.png".format(frameIndex,SubmapLength)
         mappng_fname = os.path.join(dataset_path,mappng_fname_tmp)
         if not os.path.exists(mappng_fname):
             assert False, "file {} not exist".format(mappng_fname)
@@ -218,10 +218,10 @@ def main(argv):
 
     PR_matched = pose_dists < 6
     PR_matched_show = (PR_matched * 255).astype(np.uint8)
-    cv2.imwrite("matched_{}.png".format(exp_name),PR_matched_show)
-    np.save('pose_dists_{}.npy'.format(exp_name), pose_dists)
-    np.save('center_dists_{}.npy'.format(exp_name), center_dists)
-    np.save('center_xy_{}.npy'.format(exp_name), center_xy)
+    cv2.imwrite("result/matched_{}.png".format(exp_name),PR_matched_show)
+    np.save('result/pose_dists_{}.npy'.format(exp_name), pose_dists)
+    np.save('result/center_dists_{}.npy'.format(exp_name), center_dists)
+    np.save('result/center_xy_{}.npy'.format(exp_name), center_xy)
 
     
     transl_error = np.zeros((MaxFrameId +1, MaxFrameId +1) )
@@ -250,10 +250,10 @@ def main(argv):
             print("Match: index: {} and jndex: {}, transl:{}, rot:{}".format(index, jndex, transl_error[index, jndex], rot_error[index, jndex]))
 
 
-    np.save('trans_error_{}.npy'.format(exp_name),transl_error)
-    np.save('rot_error_{}.npy'.format(exp_name),rot_error)
-    np.save('size_error_{}.npy'.format(exp_name),size_error)
-    np.save('match_confidence_{}.npy'.format(exp_name), match_confidence)
+    np.save('result/trans_error_{}.npy'.format(exp_name),transl_error)
+    np.save('result/rot_error_{}.npy'.format(exp_name),rot_error)
+    np.save('result/size_error_{}.npy'.format(exp_name),size_error)
+    np.save('result/match_confidence_{}.npy'.format(exp_name), match_confidence)
 
     tmp = 1
 
