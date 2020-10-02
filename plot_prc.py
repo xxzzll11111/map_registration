@@ -7,14 +7,15 @@ import pickle
 from scipy.spatial.distance import pdist 
 import seaborn as sns
 import sys, getopt
+import pdb
 
-def get_curve(feature_map,ground_truth,num_min,num_max,period):
+def get_curve(feature_map,ground_truth,num_min,num_max,period,dist):
     prec_recall_curve = []
     num = len(feature_map)
     sum_num = 0
     for i in range(1, num):
         for j in range(0, i):
-            if ground_truth[i, j] < 5:
+            if ground_truth[i, j] < dist:
                 ground_truth[i, j] = 1
             else:
                 ground_truth[i, j] = 0
@@ -43,19 +44,31 @@ def get_curve(feature_map,ground_truth,num_min,num_max,period):
 def main(argv):
     trans_name = "./trans_dists.npy"
     pose_name = "./pose_dists.npy"
-    opts, args = getopt.getopt(argv,"t:p:")
+    size_name = "./size_error.npy"
+    dist = 9
+    opts, args = getopt.getopt(argv,"t:p:s:d:")
     for opt, arg in opts:
         if opt in ("-t"):
             trans_name = arg
         if opt in ("-p"):
             pose_name = arg
+        if opt in ("-s"):
+            size_name = arg
+        if opt in ("-d"):
+            dist = float(arg)
+    print(type(dist))
 
     trans_dists = np.load(trans_name)
     pose_dists = np.load(pose_name)
+    size_errors = np.load(size_name)
+    # size_errors = 2./(1./size_errors + size_errors)
+    size_errors = np.where(size_errors > 1, 1./size_errors, size_errors)
+    trans_dists = trans_dists * size_errors
 
     print("doing prec_recall_curve0")
-    prec_recall_curve0 = get_curve(trans_dists,pose_dists,trans_dists.min(),trans_dists.max(),(trans_dists.max()-trans_dists.min())/200.0)
+    prec_recall_curve0 = get_curve(trans_dists,pose_dists,trans_dists.min(),trans_dists.max(),(trans_dists.max()-trans_dists.min())/200.0,dist)
     print("done prec_recall_curve0")
+    pdb.set_trace()
 
     plt.plot(prec_recall_curve0[:,2],prec_recall_curve0[:,1],'r',label="netvlad_00")
     #题目
