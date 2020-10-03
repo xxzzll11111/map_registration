@@ -147,8 +147,8 @@ def main(argv):
     for opt, arg in opts:
         if opt in ("-n"):
             exp_name = arg
-    dataset_path = 'b2-2015-09-01-11-55-40-UG' #'b0-2014-07-11-11-00-49-1OG' #'picdata' #'picdata_120'
-    MaxFrameId = 242 #418 #143
+    dataset_path = 'b0-2014-07-11-11-00-49-1OG' #'b0-2014-07-21-12-55-35-EG' #'b2-2015-09-01-11-55-40-UG' #'picdata' #'picdata_120'
+    MaxFrameId = 142 #214 #243 #418 #143
     SubmapLength = 120 #180 #120
     Resolution = 0.05
     
