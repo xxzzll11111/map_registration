@@ -148,7 +148,7 @@ def main(argv):
     for opt, arg in opts:
         if opt in ("-n"):
             exp_name = arg
-    dataset_path = 'data_20'
+    dataset_path = 'PR_result'
     dataset_dirs = os.listdir(dataset_path)
     print(dataset_dirs)
     Resolution = 0.05
@@ -245,8 +245,10 @@ def main(argv):
             for jndex in range(MaxFrameId +1 ):
                 if type(feature_list[index])==type(None) or type(feature_list[jndex])==type(None):
                     continue
-                if len(feature_list[index].getKeypoints())==0 or len(feature_list[jndex].getKeypoints())==0:
+                if len(feature_list[index].getKeypoints())<2 or len(feature_list[jndex].getKeypoints())<2:
                     continue
+                # print(len(feature_list[index].getKeypoints()))
+                # print(len(feature_list[jndex].getKeypoints()))
                 matches_info = matcher.apply(feature_list[index], feature_list[jndex])
                 match_confidence[index, jndex] = matches_info.confidence
                 if type(matches_info.H)==type(None):
