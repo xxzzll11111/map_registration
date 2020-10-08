@@ -148,7 +148,7 @@ def main(argv):
     for opt, arg in opts:
         if opt in ("-n"):
             exp_name = arg
-    dataset_path = 'data'
+    dataset_path = 'data_20'
     dataset_dirs = os.listdir(dataset_path)
     print(dataset_dirs)
     Resolution = 0.05
@@ -167,6 +167,7 @@ def main(argv):
         frame_poses = [RigidTransform()] * (MaxFrameId+1)
         submap_poses = [RigidTransform()] * (MaxFrameId+1)
         center_poses = [RigidTransform()] * (MaxFrameId+1)
+        feature_list = [None] * (MaxFrameId+1)
         center_xy = np.zeros((MaxFrameId +1, 2) )
         for file_name in file_names:
             if file_name[-3:]=='txt':
@@ -214,6 +215,10 @@ def main(argv):
                     map2centerTf = centerTf * submap_poses[frame_id]
                     center_xy[frame_id,:] = map2centerTf.translation[0],map2centerTf.translation[1]
                     print("{} global x: {}  y: {}".format(file_name, center_xy[frame_id,0], center_xy[frame_id,1]))
+                
+                mappng = cv2.GaussianBlur(mappng,(3,3),0)
+                features = cv2.detail.computeImageFeatures2(akaze, mappng)
+                feature_list[frame_id] = features
 
 
         pose_dists = np.zeros((MaxFrameId +1, MaxFrameId +1) )
@@ -232,36 +237,40 @@ def main(argv):
         np.save('result/center_xy_{}.npy'.format(data_dir), center_xy)
 
     
-    # transl_error = np.zeros((MaxFrameId +1, MaxFrameId +1) )
-    # rot_error = np.zeros((MaxFrameId +1, MaxFrameId +1) )
-    # size_error = np.zeros((MaxFrameId +1, MaxFrameId +1) )
-    # match_confidence = np.zeros((MaxFrameId +1, MaxFrameId +1) )
-    # for index in range(MaxFrameId +1 ):
-    #     for jndex in range(MaxFrameId +1 ):
-    #         matches_info = matcher.apply(feature_list[index], feature_list[jndex])
-    #         match_confidence[index, jndex] = matches_info.confidence
-    #         if type(matches_info.H)==type(None):
-    #             continue
-    #         rotation = matches_info.H[0:2,0:2]
-    #         size = math.sqrt(math.pow(rotation[0,0],2)+math.pow(rotation[0,1],2))
-    #         size_error[index, jndex] = size
-    #         rotation = rotation/size
-    #         rotation = np.pad(rotation,((0,1),(0,1)),'constant')
-    #         rotation[2,2] = 1.0
-    #         translation = matches_info.H[0:3,2]
-    #         translation[2] = 0.0
-    #         T = RigidTransform(rotation, translation, "origin{}".format(jndex), "origin{}".format(index))
-    #         error = submap_poses[index].inverse() * T * submap_poses[jndex]
-    #         # print("fromframe: {} and toframe: {}".format(error.from_frame, error.to_frame))
-    #         transl_error[index, jndex] = np.linalg.norm(error.translation,ord=2) * Resolution
-    #         rot_error[index, jndex] = math.atan(error.quaternion[3]/error.quaternion[0])
-    #         print("Match: index: {} and jndex: {}, transl:{}, rot:{}".format(index, jndex, transl_error[index, jndex], rot_error[index, jndex]))
+        transl_error = np.zeros((MaxFrameId +1, MaxFrameId +1) )
+        rot_error = np.zeros((MaxFrameId +1, MaxFrameId +1) )
+        size_error = np.zeros((MaxFrameId +1, MaxFrameId +1) )
+        match_confidence = np.zeros((MaxFrameId +1, MaxFrameId +1) )
+        for index in range(MaxFrameId +1 ):
+            for jndex in range(MaxFrameId +1 ):
+                if type(feature_list[index])==type(None) or type(feature_list[jndex])==type(None):
+                    continue
+                if len(feature_list[index].getKeypoints())==0 or len(feature_list[jndex].getKeypoints())==0:
+                    continue
+                matches_info = matcher.apply(feature_list[index], feature_list[jndex])
+                match_confidence[index, jndex] = matches_info.confidence
+                if type(matches_info.H)==type(None):
+                    continue
+                rotation = matches_info.H[0:2,0:2]
+                size = math.sqrt(math.pow(rotation[0,0],2)+math.pow(rotation[0,1],2))
+                size_error[index, jndex] = size
+                rotation = rotation/size
+                rotation = np.pad(rotation,((0,1),(0,1)),'constant')
+                rotation[2,2] = 1.0
+                translation = matches_info.H[0:3,2]
+                translation[2] = 0.0
+                T = RigidTransform(rotation, translation, "origin{}".format(jndex), "origin{}".format(index))
+                error = submap_poses[index].inverse() * T * submap_poses[jndex]
+                # print("fromframe: {} and toframe: {}".format(error.from_frame, error.to_frame))
+                transl_error[index, jndex] = np.linalg.norm(error.translation,ord=2) * Resolution
+                rot_error[index, jndex] = math.atan(error.quaternion[3]/error.quaternion[0])
+                print("{} Match: index: {} and jndex: {}, transl:{}, rot:{}".format(data_dir, index, jndex, transl_error[index, jndex], rot_error[index, jndex]))
 
 
-    # np.save('result/trans_error_{}.npy'.format(exp_name),transl_error)
-    # np.save('result/rot_error_{}.npy'.format(exp_name),rot_error)
-    # np.save('result/size_error_{}.npy'.format(exp_name),size_error)
-    # np.save('result/match_confidence_{}.npy'.format(exp_name), match_confidence)
+        np.save('result/trans_error_{}.npy'.format(data_dir),transl_error)
+        np.save('result/rot_error_{}.npy'.format(data_dir),rot_error)
+        np.save('result/size_error_{}.npy'.format(data_dir),size_error)
+        np.save('result/match_confidence_{}.npy'.format(data_dir), match_confidence)
 
 
 if __name__ == "__main__":
